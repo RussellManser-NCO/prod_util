@@ -112,7 +112,7 @@ def get_compath(relpath, envir=None, out=False, verbose=False):
                     production COM directory.
     """
 
-    relpath = re.sub("(/v\d+\.\d+)[\d\.]*",r"\1",relpath) # chop version number down to first 2 digits
+    relpath = re.sub(r"(/v\d+\.\d+)[\d\.]*",r"\1",relpath) # chop version number down to first 2 digits
 
     match_result = re.match(r'(?P<envir>prod|para|test|canned)?/?(?:com/)?(?P<NET>[\w-]+)/(?P<version>v\d+\.\d+[^/]*)((?:/(?P<RUN>[\w-]+?)(?:\.(?P<PDY>2\d(?:\d\d){1,4}))?)?(?P<tail>/.+)?)?$', relpath)
     if match_result:
