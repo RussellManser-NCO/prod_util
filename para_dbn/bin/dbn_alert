@@ -45,7 +45,12 @@ else
       exit
    fi
    echo "PARA dbn_alert out:  ${NEW_TYPE:-$1} ${NEW_SUBTYPE:-$2} $3 $4"
-   export SIPHONROOT=/lfs/h1/ops/prod/dbnet_siphon
+   whoami=$(whoami)
+   if [ $whoami == ops.para ]; then
+     export SIPHONROOT=/lfs/h1/ops/para/dbnet_siphon
+   elif [ $whoami == ops.prod ]; then
+     export SIPHONROOT=/lfs/h1/ops/prod/dbnet_siphon
+   fi
    export DBNROOT=$SIPHONROOT
    $SIPHONROOT/bin/dbn_alert ${NEW_TYPE:-$1} ${NEW_SUBTYPE:-$2} $3 $4
 
