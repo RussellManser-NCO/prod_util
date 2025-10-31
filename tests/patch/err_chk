@@ -1,0 +1,8 @@
+#!/bin/bash
+#
+# Patched version of err_chk only for testing
+# 
+
+if [[ $err -ne 0 ]]; then
+    err_exit "$1"
+fi

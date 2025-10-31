@@ -1,6 +1,51 @@
-#!/bin/sh
+#!/bin/bash
+#
+# cpreq
+# 
+# Purpose: copy one or more files which are required for an
+# application to run. The files must have size > 0.
+#
+# cpreq behaves similar to cp and accepts all valid cp options.
+# It accepts an additional option -z that allows files with size
+# zero to be copied.
+#
+# Error codes:
+#   1 : one or more input files do not exist or have size zero
+#
 
-cp $*
-if [ $? -ne 0 ] ; then
-  err_exit "'cp $*' was not successful."
+if [[ $# -lt 2 ]]; then
+  echo "Usage: $( basename "$0" ) [-z] [OPTION] SOURCE [...] DEST"
+  exit 1
 fi
+
+cp_args=()
+zero_byte="FALSE"
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    -z)
+      zero_byte="TRUE"
+      shift
+      ;;
+    *)
+      cp_args+=("$1")
+      shift
+      ;;
+  esac
+done
+
+n_targets=$(( ${#cp_args[@]} - 1 ))
+targets=("${cp_args[@]:0:$n_targets}")
+
+if [[ "$zero_byte" == "FALSE" ]]; then
+  for targ in "${targets[@]}"; do
+    if [[ ! -s $targ ]]; then
+      echo "$0: file does not exist or has size zero $targ" >&2
+        err=1
+    fi
+  done
+  export err=${err:-0};
+  err_chk "One or more input files do not exist or have size 0"
+fi
+
+cp "${cp_args[@]}"
+export err=$?; err_chk "'cp " "${cp_args[@]}" "' was not successful."

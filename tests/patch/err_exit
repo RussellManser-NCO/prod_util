@@ -1,0 +1,5 @@
+#!/bin/bash
+
+echo "FATAL ERROR: return code $err" >&2
+echo "FATAL ERROR: $1" >&2
+exit $err
