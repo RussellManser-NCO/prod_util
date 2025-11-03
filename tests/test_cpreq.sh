@@ -57,6 +57,7 @@ err_chk() {
 }
 
 err_exit() {
+    export msg="$1"
     /lfs/h1/nco/idsb/noscrub/russell.manser/git_repos/prod_util/tests/patch/err_exit
 }
 
@@ -88,10 +89,6 @@ test_one_empty_file_no_opt() {
     # -------------------------------------------------------
     # Test that cpreq *fails* to copy a single zero size file
     # without the specified '-z' option
-    #
-    # This test will pass upon *any* failure.
-    #
-    # TODO: pass only on specific failure.
     # -------------------------------------------------------
     test_dir=${TMP_DIR}/${FUNCNAME}
     setup "${test_dir}"
@@ -101,7 +98,7 @@ test_one_empty_file_no_opt() {
     touch ${test_dir}/source_dir/file.txt
     $TARGET_SCRIPT ${test_dir}/source_dir/file.txt ${test_dir}/target_dir 1> ${test_dir}/${FUNCNAME}.out 2> ${test_dir}/${FUNCNAME}.err
 
-    err_msg=$( grep "FATAL ERROR" ${test_dir}/${FUNCNAME}.err )
+    err_msg=$( grep "FATAL ERROR: return code 2" ${test_dir}/${FUNCNAME}.err )
 
     test ! -z "$err_msg"
     check_results ${FUNCNAME} $? "$err_msg"
@@ -154,10 +151,6 @@ test_multiple_empty_files_no_opt() {
     # -----------------------------------------------------
     # Test that cpreq *fails* to copy multiple files if one
     # or more are size zero and the '-z' is not specified
-    #
-    # This test will pass upon *any* failure.
-    #
-    # TODO: pass only on specific failure.
     # -----------------------------------------------------
     test_dir=${TMP_DIR}/${FUNCNAME}
     setup "${test_dir}"
@@ -170,7 +163,7 @@ test_multiple_empty_files_no_opt() {
 
     $TARGET_SCRIPT ${test_dir}/source_dir/file* ${test_dir}/target_dir 1> ${test_dir}/${FUNCNAME}.out 2> ${test_dir}/${FUNCNAME}.err
 
-    err_msg=$( grep "FATAL ERROR" ${test_dir}/${FUNCNAME}.err )
+    err_msg=$( grep "FATAL ERROR: return code 2" ${test_dir}/${FUNCNAME}.err )
 
     test ! -z "$err_msg"
     check_results ${FUNCNAME} $? "$err_msg"
@@ -204,10 +197,6 @@ test_mixed_files_no_opt() {
     # ---------------------------------------------------
     # Test that cpreq *fails* to copy multiple files when
     # one or more are size zero and '-z' is not specified
-    #
-    # This test will pass upon *any* failure.
-    #
-    # TODO: pass only on specific failure.
     # ---------------------------------------------------
     test_dir=${TMP_DIR}/${FUNCNAME}
     setup "${test_dir}"
@@ -219,7 +208,7 @@ test_mixed_files_no_opt() {
 
     $TARGET_SCRIPT ${test_dir}/source_dir/file* ${test_dir}/target_dir 1> ${test_dir}/${FUNCNAME}.out 2> ${test_dir}/${FUNCNAME}.err
 
-    err_msg=$( grep "FATAL ERROR" ${test_dir}/${FUNCNAME}.err )
+    err_msg=$( grep "FATAL ERROR: return code 2" ${test_dir}/${FUNCNAME}.err )
 
     test ! -z "$err_msg"
     check_results ${FUNCNAME} $? "$err_msg"
@@ -252,10 +241,6 @@ test_directory_no_opt() {
     # ------------------------------------------------
     # Test that copying a directory with an empty file
     # *fails* without '-z'
-    #
-    # This test will pass upon *any* failure
-    #
-    # TODO: pass only on specific failure
     # ------------------------------------------------
     test_dir=${TMP_DIR}/${FUNCNAME}
     setup "${test_dir}"
@@ -267,7 +252,7 @@ test_directory_no_opt() {
 
     $TARGET_SCRIPT -r ${test_dir}/source_dir/ ${test_dir}/target_dir 1> ${test_dir}/${FUNCNAME}.out 2> ${test_dir}/${FUNCNAME}.err
 
-    err_msg=$( grep -E "FATAL ERROR.*2" ${test_dir}/${FUNCNAME}.err )
+    err_msg=$( grep "FATAL ERROR: return code 2" ${test_dir}/${FUNCNAME}.err )
 
     test ! -z "$err_msg"
     check_results ${FUNCNAME} $? "$err_msg"
