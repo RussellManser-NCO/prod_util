@@ -10,7 +10,8 @@
 # zero to be copied.
 #
 # Error codes:
-#   1 : one or more input files do not exist or have size zero
+#   1 : command failed on `cp`
+#   2 : one or more files have size zero and '-z' was not specified
 #
 
 if [[ $# -lt 2 ]]; then
@@ -53,15 +54,9 @@ else
   targets=("${cp_args[@]:0:$n_targets}")
 fi
 
-if [[ "$zero_byte" == "FALSE" ]]; then
-  for targ in "${targets[@]}"; do
-    if [[ ! -s $targ ]]; then
-      echo "$0: file does not exist or has size zero $targ" >&2
-        err=1
-    fi
-  done
-  export err=${err:-0};
-  err_chk "One or more input files do not exist or have size 0"
+zero_byte_files=$( find "${targets[@]}" -size 0 -print )
+if [[ "$zero_byte" != "TRUE" ]] && [[ -n "$zero_byte_files" ]]; then
+    export err=2; err_chk "One or more input files have size zero: ${zero_byte_files[*]}"
 fi
 
 cmd="cp ${cp_opts[*]} ${cp_args[*]}"

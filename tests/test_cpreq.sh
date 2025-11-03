@@ -248,6 +248,54 @@ test_mixed_files_opt() {
 }
 
 
+test_directory_no_opt() {
+    # ------------------------------------------------
+    # Test that copying a directory with an empty file
+    # *fails* without '-z'
+    #
+    # This test will pass upon *any* failure
+    #
+    # TODO: pass only on specific failure
+    # ------------------------------------------------
+    test_dir=${TMP_DIR}/${FUNCNAME}
+    setup "${test_dir}"
+
+    export pgm=${FUNCNAME}
+
+    echo "This is a file with text in it" > ${test_dir}/source_dir/file1.txt
+    touch ${test_dir}/source_dir/file2.txt
+
+    $TARGET_SCRIPT -r ${test_dir}/source_dir/ ${test_dir}/target_dir 1> ${test_dir}/${FUNCNAME}.out 2> ${test_dir}/${FUNCNAME}.err
+
+    err_msg=$( grep -E "FATAL ERROR.*2" ${test_dir}/${FUNCNAME}.err )
+
+    test ! -z "$err_msg"
+    check_results ${FUNCNAME} $? "$err_msg"
+}
+
+
+test_directory_opt() {
+    # --------------------------------------
+    # Test copying a directory recursively
+    # which contains an empty file with '-z'
+    # --------------------------------------
+    test_dir=${TMP_DIR}/${FUNCNAME}
+    setup "${test_dir}"
+
+    export pgm=${FUNCNAME}
+
+    echo "This is a file with text in it" > ${test_dir}/source_dir/file1.txt
+    touch ${test_dir}/source_dir/file2.txt
+
+    $TARGET_SCRIPT -z -r ${test_dir}/source_dir/ ${test_dir}/target_dir 1> ${test_dir}/${FUNCNAME}.out 2> ${test_dir}/${FUNCNAME}.err
+
+    err_msg=$( grep "FATAL ERROR" ${test_dir}/${FUNCNAME}.err )
+
+    test -z "$err_msg"
+    check_results ${FUNCNAME} $? "$err_msg"
+}
+
+
 test_one_cp_opt() {
     # ----------------------------
     # Test with a single cp option
@@ -373,6 +421,8 @@ main() {
     wrapper "test_multiple_empty_files_opt"
     wrapper "test_mixed_files_no_opt"
     wrapper "test_mixed_files_opt"
+    wrapper "test_directory_no_opt"
+    wrapper "test_directory_opt"
     wrapper "test_one_cp_opt"
     wrapper "test_one_cp_opt_zero_byte"
     wrapper "test_multiple_cp_opts"
