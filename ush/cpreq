@@ -19,11 +19,22 @@ if [[ $# -lt 2 ]]; then
 fi
 
 cp_args=()
+cp_opts=()
 zero_byte="FALSE"
 while [[ $# -gt 0 ]]; do
   case $1 in
     -z)
       zero_byte="TRUE"
+      shift
+      ;;
+    # 'cp -t' reverses source/directory arguments
+    # so it needs special handling
+    -t)
+      cp_args+=("$1")
+      shift
+      ;;
+    -*)
+      cp_opts+=("$1")
       shift
       ;;
     *)
@@ -33,8 +44,14 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-n_targets=$(( ${#cp_args[@]} - 1 ))
-targets=("${cp_args[@]:0:$n_targets}")
+# Handle 'cp -t' case
+if [[ "${cp_args[*]}" =~ [[:space:]]?-t[[:space:]] ]]; then
+  targets=("${cp_args[@]#*-t}")
+  targets=("${targets[@]:1}")
+else
+  n_targets=$(( ${#cp_args[@]} - 1 ))
+  targets=("${cp_args[@]:0:$n_targets}")
+fi
 
 if [[ "$zero_byte" == "FALSE" ]]; then
   for targ in "${targets[@]}"; do
@@ -47,5 +64,6 @@ if [[ "$zero_byte" == "FALSE" ]]; then
   err_chk "One or more input files do not exist or have size 0"
 fi
 
-cp "${cp_args[@]}"
-export err=$?; err_chk "'cp " "${cp_args[@]}" "' was not successful."
+cmd="cp ${cp_opts[*]} ${cp_args[*]}"
+$cmd
+export err=$?; err_chk "'$cmd' was not successful."

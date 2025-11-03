@@ -84,7 +84,7 @@ test_one_file() {
 }
 
 
-test_one_empty_file_no_flag() {
+test_one_empty_file_no_opt() {
     # -------------------------------------------------------
     # Test that cpreq *fails* to copy a single zero size file
     # without the specified '-z' option
@@ -108,7 +108,7 @@ test_one_empty_file_no_flag() {
 }
 
 
-test_one_empty_file_flag() {
+test_one_empty_file_opt() {
     # ------------------------------------------------------
     # Test that cpreq copys a single zero size file with the
     # '-z' option specified
@@ -150,7 +150,7 @@ test_multiple_files() {
 }
 
 
-test_multiple_empty_files_no_flag() {
+test_multiple_empty_files_no_opt() {
     # -----------------------------------------------------
     # Test that cpreq *fails* to copy multiple files if one
     # or more are size zero and the '-z' is not specified
@@ -177,7 +177,7 @@ test_multiple_empty_files_no_flag() {
 }
 
 
-test_multiple_empty_files_flag() {
+test_multiple_empty_files_opt() {
     # ---------------------------------------------------
     # Test the cpreq copies multiple zero size files with
     # the '-z' option specified
@@ -200,7 +200,7 @@ test_multiple_empty_files_flag() {
 }
 
 
-test_mixed_files_no_flag() {
+test_mixed_files_no_opt() {
     # ---------------------------------------------------
     # Test that cpreq *fails* to copy multiple files when
     # one or more are size zero and '-z' is not specified
@@ -226,7 +226,7 @@ test_mixed_files_no_flag() {
 }
 
 
-test_mixed_files_flag() {
+test_mixed_files_opt() {
     # -------------------------------------------------
     # Test that cpreq copies multiple files when one or
     # more are size zero and '-z' is specified
@@ -248,10 +248,50 @@ test_mixed_files_flag() {
 }
 
 
-test_with_cp_flags() {
-    # ------------------------------------
-    # Test that cpreq accepts cp arguments
-    # ------------------------------------
+test_one_cp_opt() {
+    # ----------------------------
+    # Test with a single cp option
+    # ----------------------------
+    test_dir=${TMP_DIR}/${FUNCNAME}
+    setup "${test_dir}"
+
+    export pgm=${FUNCNAME}
+
+    echo "This is a file with text in it" > ${test_dir}/source_dir/file1.txt
+
+    $TARGET_SCRIPT -p ${test_dir}/source_dir/file1.txt ${test_dir}/target_dir 1> ${test_dir}/${FUNCNAME}.out 2> ${test_dir}/${FUNCNAME}.err
+
+    err_msg=$( grep "FATAL ERROR" ${test_dir}/${FUNCNAME}.err )
+
+    test -z "$err_msg"
+    check_results ${FUNCNAME} $? "$err_msg"
+}
+
+
+test_one_cp_opt_zero_byte() {
+    # -----------------------------------
+    # Test with -z and a single cp option
+    # -----------------------------------
+    test_dir=${TMP_DIR}/${FUNCNAME}
+    setup "${test_dir}"
+
+    export pgm=${FUNCNAME}
+
+    touch ${test_dir}/source_dir/file1.txt
+
+    $TARGET_SCRIPT -z -p ${test_dir}/source_dir/file1.txt ${test_dir}/target_dir 1> ${test_dir}/${FUNCNAME}.out 2> ${test_dir}/${FUNCNAME}.err
+
+    err_msg=$( grep "FATAL ERROR" ${test_dir}/${FUNCNAME}.err )
+
+    test -z "$err_msg"
+    check_results ${FUNCNAME} $? "$err_msg"
+}
+
+
+test_multiple_cp_opts() {
+    # ---------------------------------------------
+    # Test that cpreq accepts multiple cp arguments
+    # ---------------------------------------------
     test_dir=${TMP_DIR}/${FUNCNAME}
     setup "${test_dir}"
 
@@ -259,7 +299,7 @@ test_with_cp_flags() {
 
     echo "This is a file with text in it" > ${test_dir}/source_dir/file1.txt
     
-    $TARGET_SCRIPT -z -pi ${test_dir}/source_dir/file* ${test_dir}/target_dir 1> ${test_dir}/${FUNCNAME}.out 2> ${test_dir}/${FUNCNAME}.err
+    $TARGET_SCRIPT -z -pr ${test_dir}/source_dir/file* ${test_dir}/target_dir 1> ${test_dir}/${FUNCNAME}.out 2> ${test_dir}/${FUNCNAME}.err
 
     err_msg=$( egrep "FATAL ERROR|illegal" ${test_dir}/${FUNCNAME}.err )
 
@@ -267,10 +307,28 @@ test_with_cp_flags() {
     check_results ${FUNCNAME} $? "$err_msg"
 }
 
-test_with_cp_target_dir() {
-    # -----------------
-    # Test with -t flag
-    # -----------------
+
+test_multiple_cp_opts_zero_byte() {
+    # --------------------------------------
+    # Test with '-z' and multiple cp options
+    # --------------------------------------
+    test_dir=${TMP_DIR}/${FUNCNAME}
+    setup "${test_dir}"
+
+    export pgm=${FUNCNAME}
+
+    touch ${test_dir}/source_dir/file1.txt ${test_dir}/target_dir 1> ${test_dir}/${FUNCNAME}.out 2> ${test_dir}/${FUNCNAME}.err
+
+    err_msg=$( grep "FATAL ERROR" ${test_dir}/${FUNCNAME}.err )
+
+    test -z "$err_msg"
+    check_results ${FUNCNAME} $? "$err_msg"
+}
+
+test_cp_opt_t() {
+    # ----------------------
+    # Test with cp -t option
+    # ----------------------
     test_dir=${TMP_DIR}/${FUNCNAME}
     setup "${test_dir}"
 
@@ -282,13 +340,10 @@ test_with_cp_target_dir() {
 
     err_msg=$( grep "FATAL ERROR" ${test_dir}/${FUNCNAME}.err )
 
-    test -z "$err_msg"
+    test -z "$err_msg" -a -s ${test_dir}/target_dir/file1.txt
     check_results ${FUNCNAME} $? "$err_msg"
 }
 
-test_with_cp_no_target_dir() {
-    check_results ${FUNCNAME} 1 "Test not implemented"
-}
 
 # -----------
 # Main script
@@ -311,16 +366,18 @@ main() {
     echo "$( basename "$0" )"
     echo "====================================="
     wrapper "test_one_file"
-    wrapper "test_one_empty_file_no_flag"
-    wrapper "test_one_empty_file_flag"
+    wrapper "test_one_empty_file_no_opt"
+    wrapper "test_one_empty_file_opt"
     wrapper "test_multiple_files"
-    wrapper "test_multiple_empty_files_no_flag"
-    wrapper "test_multiple_empty_files_flag"
-    wrapper "test_mixed_files_no_flag"
-    wrapper "test_mixed_files_flag"
-    wrapper "test_with_cp_flags"
-    wrapper "test_with_cp_target_dir"
-    wrapper "test_with_cp_no_target_dir"
+    wrapper "test_multiple_empty_files_no_opt"
+    wrapper "test_multiple_empty_files_opt"
+    wrapper "test_mixed_files_no_opt"
+    wrapper "test_mixed_files_opt"
+    wrapper "test_one_cp_opt"
+    wrapper "test_one_cp_opt_zero_byte"
+    wrapper "test_multiple_cp_opts"
+    wrapper "test_multiple_cp_opts_zero_byte"
+    wrapper "test_cp_opt_t"
     echo "====================================="
 
     echo "Summary"
