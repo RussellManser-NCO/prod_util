@@ -53,12 +53,12 @@ fi
 
 # Write to ecflow log w/ ecflow_client:
 if [ "$SENDECF" = "YES" ]; then
- echo "Killing the job via ecflow comands"
   timeout 30 ecflow_client --msg "$ECF_NAME: $msg1"
   timeout 30 ssh $ECF_HOST "echo \"$msg2\" >> ${ECF_JOBOUT:?}"
-  timeout 30 ecflow_client --kill=${ECF_NAME:?} && sleep 10
-# Kill job directly if not using ecflow
-elif [ -n "$PBS_JOBID" ]; then
+fi
+
+# Kill job via scheduler
+if [ -n "$PBS_JOBID" ]; then
   echo "Killing the job via qdel"
   qdel $PBS_JOBID
 elif [ -n "$SLURM_JOBID" ]; then
@@ -67,6 +67,8 @@ elif [ -n "$SLURM_JOBID" ]; then
 elif [ -n "$LSF_JOBID" ]; then
   echo "Killing the job via bkill"
   bkill "$LSF_JOBID"
-else
-  exit "${err:-1}"
+# Kill ecFlow tasks that did not submit to a scheduler
+elif  [ "$SENDECF" = "YES" ]; then
+  echo "Killing the job via ecflow kill"
+  ecflow_client --kill=${ECF_NAME:?}
 fi
