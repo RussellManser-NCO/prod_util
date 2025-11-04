@@ -49,7 +49,7 @@ check_results() {
     err=$2
     err_msg=$3
 
-    target_script=$( basename "$0" )
+    target_script=$( basename "$TARGET_SCRIPT" )
 
     if [[ $err -eq 0 ]]; then
         echo "PASSED: ${target_script}:${func_name}"
@@ -94,14 +94,25 @@ test_one_empty_file_no_opt() {
     # -------------------------------------------------------
     # Test that cpreq *fails* to copy a single zero size file
     # without the specified '-z' option
+    #
+    # Test that 'cp' is successful for the same conditions
     # -------------------------------------------------------
     touch ${test_dir}/source_dir/file.txt
     $TARGET_SCRIPT ${test_dir}/source_dir/file.txt ${test_dir}/target_dir 1> ${test_dir}/${FUNCNAME}.out 2> ${test_dir}/${FUNCNAME}.err
 
     err_msg=$( grep "FATAL ERROR: return code 2" ${test_dir}/${FUNCNAME}.err )
 
-    test ! -z "$err_msg"
-    check_results ${FUNCNAME} $? "$err_msg"
+    if [[ "$TARGET_SCRIPT" =~ cpreq ]]; then
+        test ! -z "$err_msg"
+        err=$?
+    elif [[ "$TARGET_SCRIPT" = "cp" ]]; then
+        test -z "$err_msg"
+        err=$?
+    else
+        echo "$TARGET_SCRIPT is not a valid test option for $FUNCNAME" >&2
+        err=3
+    fi
+    check_results ${FUNCNAME} $err "$err_msg"
 }
 
 
@@ -141,6 +152,8 @@ test_multiple_empty_files_no_opt() {
     # -----------------------------------------------------
     # Test that cpreq *fails* to copy multiple files if one
     # or more are size zero and the '-z' is not specified
+    #
+    # Test that 'cp' is successful for the same conditions
     # -----------------------------------------------------
     for i in $( seq 1 3 ); do
         touch ${test_dir}/source_dir/file${i}.txt
@@ -150,8 +163,18 @@ test_multiple_empty_files_no_opt() {
 
     err_msg=$( grep "FATAL ERROR: return code 2" ${test_dir}/${FUNCNAME}.err )
 
-    test ! -z "$err_msg"
-    check_results ${FUNCNAME} $? "$err_msg"
+    if [[ "$TARGET_SCRIPT" =~ cpreq ]]; then
+        test ! -z "$err_msg"
+        err=$?
+    elif [[ "$TARGET_SCRIPT" = "cp" ]]; then
+        test -z "$err_msg"
+        err=$?
+    else
+        echo "$TARGET_SCRIPT is not a valid test option for $FUNCNAME" >&2
+        err=3
+    fi
+
+    check_results ${FUNCNAME} $err "$err_msg"
 }
 
 
@@ -174,10 +197,12 @@ test_multiple_empty_files_opt() {
 
 
 test_mixed_files_no_opt() {
-    # ---------------------------------------------------
+    # ----------------------------------------------------
     # Test that cpreq *fails* to copy multiple files when
     # one or more are size zero and '-z' is not specified
-    # ---------------------------------------------------
+    #
+    # Test that 'cp' is successful for the same conditions
+    # ----------------------------------------------------
     echo "This is a file with text in it" > ${test_dir}/source_dir/file1.txt
     touch ${test_dir}/source_dir/file2.txt
 
@@ -185,8 +210,18 @@ test_mixed_files_no_opt() {
 
     err_msg=$( grep "FATAL ERROR: return code 2" ${test_dir}/${FUNCNAME}.err )
 
-    test ! -z "$err_msg"
-    check_results ${FUNCNAME} $? "$err_msg"
+    if [[ "$TARGET_SCRIPT" =~ cpreq ]]; then
+        test ! -z "$err_msg"
+        err=$?
+    elif [[ "$TARGET_SCRIPT" = "cp" ]]; then
+        test -z "$err_msg"
+        err=$?
+    else
+        echo "$TARGET_SCRIPT is not a valid test option for $FUNCNAME" >&2
+        err=3
+    fi
+
+    check_results ${FUNCNAME} $err "$err_msg"
 }
 
 
@@ -208,10 +243,12 @@ test_mixed_files_opt() {
 
 
 test_directory_no_opt() {
-    # ------------------------------------------------
+    # ----------------------------------------------------
     # Test that copying a directory with an empty file
     # *fails* without '-z'
-    # ------------------------------------------------
+    #
+    # Test that 'cp' is successful for the same conditions
+    # ----------------------------------------------------
     echo "This is a file with text in it" > ${test_dir}/source_dir/file1.txt
     touch ${test_dir}/source_dir/file2.txt
 
@@ -219,8 +256,18 @@ test_directory_no_opt() {
 
     err_msg=$( grep "FATAL ERROR: return code 2" ${test_dir}/${FUNCNAME}.err )
 
-    test ! -z "$err_msg"
-    check_results ${FUNCNAME} $? "$err_msg"
+    if [[ "$TARGET_SCRIPT" =~ cpreq ]]; then
+        test ! -z "$err_msg"
+        err=$?
+    elif [[ "$TARGET_SCRIPT" = "cp" ]]; then
+        test -z "$err_msg"
+        err=$?
+    else
+        echo "$TARGET_SCRIPT is not a valid test option for $FUNCNAME" >&2
+        err=3
+    fi
+
+    check_results ${FUNCNAME} $err "$err_msg"
 }
 
 
@@ -331,6 +378,7 @@ main() {
     export NPASSED=0
     export NFAILED=0
 
+    echo "====================================="
     echo "$( basename "$0" )"
     echo "====================================="
     wrapper "test_one_file"
@@ -347,6 +395,18 @@ main() {
     wrapper "test_one_cp_opt_zero_byte"
     wrapper "test_multiple_cp_opts"
     wrapper "test_multiple_cp_opts_zero_byte"
+    wrapper "test_cp_opt_t"
+
+    export TARGET_SCRIPT="cp"
+
+    wrapper "test_one_file"
+    wrapper "test_one_empty_file_no_opt"
+    wrapper "test_multiple_files"
+    wrapper "test_multiple_empty_files_no_opt"
+    wrapper "test_mixed_files_no_opt"
+    wrapper "test_directory_no_opt"
+    wrapper "test_one_cp_opt"
+    wrapper "test_multiple_cp_opts"
     wrapper "test_cp_opt_t"
     echo "====================================="
 
