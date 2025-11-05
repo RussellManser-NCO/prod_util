@@ -359,6 +359,35 @@ test_cp_opt_t() {
     check_results ${FUNCNAME} $? "$err_msg"
 }
 
+test_cp_opt_long_form() {
+    # ---------------------------
+    # Test with long form options
+    # ---------------------------
+    echo "This is a file with text in it" > ${test_dir}/source_dir/file1.txt
+
+    $TARGET_SCRIPT --preserve=ownership --no-clobber ${test_dir}/source_dir/file1.txt ${test_dir}/target_dir/ 1> ${test_dir}/${FUNCNAME}.out 2> ${test_dir}/${FUNCNAME}.err
+
+    err_msg=$( grep "FATAL ERROR" ${test_dir}/${FUNCNAME}.err )
+
+    test -z "$err_msg"
+    check_results ${FUNCNAME} $? "$err_msg"
+}
+
+test_cp_opt_long_form_zero_byte() {
+    # ------------------------------------
+    # Test with '-z' and long form options
+    # ------------------------------------
+    echo "This is a file with test in it" > ${test_dir}/source_dir/file1.txt
+    touch ${test_dir}/source_dir/file2.txt
+
+    $TARGET_SCRIPT -z --preserve=ownership --no-clobber ${test_dir}/source_dir/file* ${test_dir}/target_dir/ 1> ${test_dir}/${FUNCNAME}.out 2> ${test_dir}/${FUNCNAME}.err
+
+    err_msg=$( grep "FATAL ERROR" ${test_dir}/${FUNCNAME}.err )
+
+    test -z "$err_msg"
+    check_results ${FUNCNAME} $? "$err_msg"
+}
+
 
 # -----------
 # Main script
@@ -396,6 +425,8 @@ main() {
     wrapper "test_multiple_cp_opts"
     wrapper "test_multiple_cp_opts_zero_byte"
     wrapper "test_cp_opt_t"
+    wrapper "test_cp_opt_long_form"
+    wrapper "test_cp_opt_long_form_zero_byte"
 
     export TARGET_SCRIPT="cp"
 
@@ -408,6 +439,7 @@ main() {
     wrapper "test_one_cp_opt"
     wrapper "test_multiple_cp_opts"
     wrapper "test_cp_opt_t"
+    wrapper "test_cp_opt_long_form"
     echo "====================================="
 
     echo "Summary"
