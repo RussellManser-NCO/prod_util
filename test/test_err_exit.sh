@@ -221,7 +221,7 @@ test_kill_via_ecflow_no_ecf_name() {
     export ECF_HOST="my-ecflow-host"
     export ECF_JOBOUT="/path/to/ecf.out"
     export ECF_NAME=""
-    export JOBID="12345.scheduler"
+    export KILLJOB=""
 
     local output
     output=$($SCRIPT_UNDER_TEST 2>&1)
@@ -229,7 +229,7 @@ test_kill_via_ecflow_no_ecf_name() {
     if [[ "$output" == *"FATAL ERROR Unable to kill ecflow job as ECF_NAME variable is not set!!"* ]]; then
         pass "$FUNCNAME"
     else
-        fail "$FUNCNAME" "Expected qdel call missing or JOBID not set properly. Output: $output"
+        fail "$FUNCNAME" "Expected error for missing ECF_NAME was not raised. Output: $output"
     fi
     teardown
 }
@@ -255,7 +255,8 @@ test_kill_via_qdel_no_pbs_jobid() {
     local output
     output=$($SCRIPT_UNDER_TEST 2>&1)
 
-    if [[ "$output" == *"Could not find a scheduler command or job ID to kill the current job"* ]] && \
+    if [[ "$output" == *"Could not find an appropriate command to kill the current job"* ]] && \
+        [[ "$output" == *"SENDECF = NO"* ]] && \
         [[ "$output" == *"KILLJOB = qdel"* ]] && \
         echo "$output" | grep -qE "^JOBID   = $" ; then
         pass "$FUNCNAME"
