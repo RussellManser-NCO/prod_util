@@ -8,6 +8,12 @@
 # USAGE:  To use this script one must export the following variables to the
 # script: jobid, SENDECF, pgm, pgmout, DATA. One can provide
 # a message for the logfile by passing it to the script as an argument.
+#
+# NOTES: err_exit must only call qdel OR ecflow_client --kill, not both.
+# - If using PBS     --> kill the job with qdel
+# - If NOT using PBS --> kill the job with ecflow_client --kill
+# Calling ecflow_client --kill on a PBS job will NOT kill the job immediately
+# Refs: #17
 
 err=${err:-""}             # Return code from program
 pgm=${pgm:-""}             # Program name

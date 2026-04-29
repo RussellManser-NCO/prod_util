@@ -249,6 +249,26 @@ test_kill_via_qdel_when_pbs_set() {
     teardown
 }
 
+test_kill_via_qdel_when_pbs_set_and_sendecf_yes() {
+    # Check that ecflow_client --kill never gets called for a job
+    # submitted with PBS.
+    # Refs: #17
+
+    setup
+    export PBS_JOBID="12345.scheduler"
+    export SENDECF="YES"
+
+    local output
+    output=$($SCRIPT_UNDER_TEST 2>&1)
+
+    if [[ "$output" == *"mock_ecflow_client --kill"* ]]; then
+        fail "$FUNCNAME" "ecflow_client --kill called improperly. Output: $output"
+    else
+        pass "$FUNCNAME"
+    fi
+    teardown
+}
+
 test_kill_via_qdel_no_pbs_jobid() {
     setup
 
@@ -289,6 +309,7 @@ test_ecflow_log_no_ecf_jobout_no_ecf_host
 test_kill_via_ecflow_when_no_pbs
 test_kill_via_ecflow_no_ecf_name
 test_kill_via_qdel_when_pbs_set
+test_kill_via_qdel_when_pbs_set_and_sendecf_yes
 test_kill_via_qdel_no_pbs_jobid
 
 echo "-------------------------------------------------------------"
