@@ -221,7 +221,7 @@ test_kill_via_ecflow_no_ecf_name() {
     export ECF_HOST="my-ecflow-host"
     export ECF_JOBOUT="/path/to/ecf.out"
     export ECF_NAME=""
-    export JOBID="12345.scheduler"
+    export KILLJOB=""
 
     local output
     output=$($SCRIPT_UNDER_TEST 2>&1)
@@ -229,7 +229,7 @@ test_kill_via_ecflow_no_ecf_name() {
     if [[ "$output" == *"FATAL ERROR Unable to kill ecflow job as ECF_NAME variable is not set!!"* ]]; then
         pass "$FUNCNAME"
     else
-        fail "$FUNCNAME" "Expected qdel call missing or JOBID not set properly. Output: $output"
+        fail "$FUNCNAME" "Expected error for missing ECF_NAME was not raised. Output: $output"
     fi
     teardown
 }
@@ -249,13 +249,34 @@ test_kill_via_qdel_when_pbs_set() {
     teardown
 }
 
+test_kill_via_qdel_when_pbs_set_and_sendecf_yes() {
+    # Check that ecflow_client --kill never gets called for a job
+    # submitted with PBS.
+    # Refs: #17
+
+    setup
+    export PBS_JOBID="12345.scheduler"
+    export SENDECF="YES"
+
+    local output
+    output=$($SCRIPT_UNDER_TEST 2>&1)
+
+    if [[ "$output" == *"mock_ecflow_client --kill"* ]]; then
+        fail "$FUNCNAME" "ecflow_client --kill called improperly. Output: $output"
+    else
+        pass "$FUNCNAME"
+    fi
+    teardown
+}
+
 test_kill_via_qdel_no_pbs_jobid() {
     setup
 
     local output
     output=$($SCRIPT_UNDER_TEST 2>&1)
 
-    if [[ "$output" == *"Could not find a scheduler command or job ID to kill the current job"* ]] && \
+    if [[ "$output" == *"Could not find an appropriate command to kill the current job"* ]] && \
+        [[ "$output" == *"SENDECF = NO"* ]] && \
         [[ "$output" == *"KILLJOB = qdel"* ]] && \
         echo "$output" | grep -qE "^JOBID   = $" ; then
         pass "$FUNCNAME"
@@ -288,6 +309,7 @@ test_ecflow_log_no_ecf_jobout_no_ecf_host
 test_kill_via_ecflow_when_no_pbs
 test_kill_via_ecflow_no_ecf_name
 test_kill_via_qdel_when_pbs_set
+test_kill_via_qdel_when_pbs_set_and_sendecf_yes
 test_kill_via_qdel_no_pbs_jobid
 
 echo "-------------------------------------------------------------"
