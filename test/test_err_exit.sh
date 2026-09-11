@@ -131,6 +131,13 @@ test_errfile_appends_to_pgmout() {
     teardown
 }
 
+test_empty_pgmout_file() {
+    setup
+    export pgmout=""
+
+    fail "$FUNCNAME"
+}
+
 test_sendecf_yes() {
     setup
     export SENDECF="YES"
@@ -302,6 +309,7 @@ test_message_construction
 test_data_warning_when_unset
 test_ls_when_data_set
 test_errfile_appends_to_pgmout
+test_empty_pgmout_file
 test_sendecf_yes
 test_ecflow_log_no_ecf_jobout
 test_ecflow_log_no_ecf_host
